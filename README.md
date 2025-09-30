@@ -2,17 +2,29 @@
 
 Welcome to STEMMY! This is an intelligent tutoring system designed to help users learn STEM subjects by adapting to their emotional state.
 
-This guide will help you set up and run the project on your local machine.
-
 ---
 
-## How It Works
+## 📥 Download the Project
 
-The project has two main parts that work together:
-1.  **Backend (Python/FastAPI):** An API server that handles all the logic. It runs on `http://localhost:8000`.
-2.  **Frontend (React/JavaScript ):** A web interface in the `Chatbot-UI` folder that the user interacts with. It runs on `http://localhost:3000`.
+You have two options to get the project files:
 
-The frontend sends requests to the backend, which then communicates with the OpenAI API to generate intelligent responses.
+**Option 1: Direct Download (Recommended for Quick Start)**
+
+If you don't use Git, you can download the entire project as a ZIP file directly from Google Drive.
+
+<a href="https://drive.google.com/drive/folders/1iRPbpFa2pmvNaLqr7370_50VOXTRJ450?usp=sharing" target="_blank">
+    <img src="https://img.shields.io/badge/Google%20Drive-Download%20Project-4285F4?style=for-the-badge&logo=googledrive" alt="Download from Google Drive">
+</a>
+
+> After downloading, unzip the folder and follow the setup instructions below starting from **Step 3**.
+
+**Option 2: Using Git (For Developers )**
+
+Open your terminal or command prompt and run this command:
+```bash
+git clone https://github.com/moadel2004/stemmy_team.git
+cd stemmy_team
+```
 
 ---
 
@@ -24,18 +36,13 @@ Follow these steps carefully to run the entire application on your computer.
 
 - **Python 3.10+**
 - **Node.js and npm**
-- **Git**
 - An **OpenAI API Key**. You can get one from the [OpenAI Platform](https://platform.openai.com/account/api-keys ).
 
-### **Step 2: Clone the Repository**
+### **Step 2: Get the Project Files**
 
-Open your terminal or command prompt and run this command:
-```bash
-git clone https://github.com/moadel2004/stemmy_team.git
-cd stemmy_team
-```
+Choose one of the download options mentioned above (Google Drive or Git).
 
-### **Step 3: Set Up the Backend (The "Brain" )**
+### **Step 3: Set Up the Backend (The "Brain")**
 
 1.  **Create a Python Virtual Environment:** This isolates the project's dependencies.
     ```bash
