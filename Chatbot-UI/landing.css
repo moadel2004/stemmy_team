@@ -1,0 +1,144 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #080606;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Floating scientific symbols background */
+.bg-symbols {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.floating-symbol {
+    position: absolute;
+    font-size: 2rem; /* Original size, can be adjusted */
+    font-weight: 300;
+    user-select: none;
+    color: #0ff;
+    text-shadow:
+        0 0 5px #0ff,
+        0 0 10px #0ff,
+        0 0 20px #0ff,
+        0 0 40px #077,
+        0 0 80px #077;
+    animation: floatNeon 20s infinite linear;
+    opacity: 0;
+}
+
+@keyframes floatNeon {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+        filter: hue-rotate(0deg);
+    }
+    10% {
+        opacity: 0.7;
+    }
+    90% {
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(-10vh) rotate(360deg);
+        opacity: 0;
+        filter: hue-rotate(360deg);
+    }
+}
+.landing-container {
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.svg-character-container {
+    margin-bottom: 30px;
+}
+
+.interactive-svg-character-landing {
+    width: 150px; /* Adjust size as needed */
+    height: 150px; /* Adjust size as needed */
+    filter: drop-shadow(0 0 15px #4285f4); /* Optional: add a glow */
+}
+
+.neon-text {
+    font-size: 3.5rem; /* Responsive font size */
+    font-weight: bold;
+    margin-bottom: 40px;
+    background-image: linear-gradient(to right, #ff0080, #00ffff, #8000ff, #ff8000, #ff0080);
+    background-size: 200% auto;
+    color: #fff;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: neonShine 5s linear infinite;
+    letter-spacing: 2px;
+}
+
+
+
+
+
+@keyframes neonShine {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.get-started-button {
+    display: inline-block;
+    padding: 15px 35px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #4285f4;
+    border: none;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.4);
+}
+
+.get-started-button:hover {
+    background-color: #5a95f5;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(66, 133, 244, 0.5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .neon-text {
+        font-size: 2.5rem;
+    }
+    .interactive-svg-character-landing {
+        width: 120px;
+        height: 120px;
+    }
+    .get-started-button {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .neon-text {
+        font-size: 2rem;
+    }
+    .interactive-svg-character-landing {
+        width: 100px;
+        height: 100px;
+    }
+}
