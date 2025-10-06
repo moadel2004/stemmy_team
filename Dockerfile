@@ -1,25 +1,20 @@
-# Use an official Python runtime as a parent image
+# 1. ابدأ بصورة بايثون رسمية
 FROM python:3.11-slim
 
-# Set the working directory in the container
+# 2. قم بتعيين مجلد العمل داخل الحاوية
 WORKDIR /app
 
-# Copy the requirements file into the container
+# 3. انسخ ملف الاعتماديات أولاً للاستفادة من التخزين المؤقت لـ Docker
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-# We add --no-cache-dir to reduce image size
+# 4. قم بتثبيت الاعتماديات
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# 5. انسخ باقي كود التطبيق
 COPY . .
 
-# Make port 8000 available to the world outside this container
+# 6. قم بتعريض المنفذ الذي سيعمل عليه Gunicorn
 EXPOSE 8000
 
-# Define environment variable for the port
-ENV PORT 8000
-
-# Run backend_api.py when the container launches
-# Use Gunicorn for production
+# 7. الأمر لتشغيل التطبيق
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "backend_api:app", "--bind", "0.0.0.0:8000"]
