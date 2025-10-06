@@ -378,6 +378,7 @@ def chat_openai_endpoint(payload: ChatRequest):
         return ChatResponse(reply=text or "")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"OpenAI error: {e}")
+# This is a dummy change to trigger a new build
 
 # Debug endpoint (لا يكشف المفتاح)
 @app.get("/api/openai_status")
