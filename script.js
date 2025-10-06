@@ -6,8 +6,6 @@ const scientificSymbols = [
     '∑', '∫', '∂', '∆', '∇', '∞', 'π', 'α', 'γ', 'θ', 'λ', 'μ', 'σ',
     '√', '∛', '≤', '≥', '≠', '≈', '≡', '∝', '∴', '∵', '∠', '⊥', '∥',
     'CO₂', 'H₂O', 'NaCl', 'CH₄', 'NH₃', 'Fe²⁺', 'Ca²⁺', 'SO₄²⁻'
-
-    
 ];
 
 // Available STEM domains
@@ -25,8 +23,14 @@ const STEM_DOMAINS = [
     'Robotics'
 ];
 
+// --- CONFIGURATION ---
+// This is the only line you need to change if your backend URL changes.
+const BACKEND_URL = 'https://stemmy-backend-api-dedtgxcnenhph7ea.francecentral-01.azurewebsites.net';
+// -------------------
+
+
 // Floating background symbols component
-const FloatingSymbols = () => {
+const FloatingSymbols = ( ) => {
     const [symbols, setSymbols] = useState([]);
 
     useEffect(() => {
@@ -176,7 +180,7 @@ const STEMTutorApp = () => {
 
     const checkServerStatus = async () => {
         try {
-            const response = await fetch('http://localhost:8000/health', {
+            const response = await fetch(`${BACKEND_URL}/health`, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
@@ -201,7 +205,7 @@ const STEMTutorApp = () => {
         if (serverStatus !== 'online') return;
         
         try {
-            const response = await fetch('http://localhost:8000/emotion_context', {
+            const response = await fetch(`${BACKEND_URL}/emotion_context`, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
@@ -239,7 +243,6 @@ const STEMTutorApp = () => {
         setVirtualBackground(backgroundId);
         setShowBackgroundOptions(false);
         
-        // If blur is selected, enable blur instead of virtual background
         if (backgroundId === 'blur') {
             setBackgroundBlur(true);
             setVirtualBackground('none');
@@ -296,7 +299,6 @@ const STEMTutorApp = () => {
 
     // ===== OpenAI call (backend proxy) =====
     async function callOpenAI(message, history, model = "gpt-4o-mini", temperature = 0.5) {
-        // enforce chosen domain as topic_override so backend injects specialization
         const payload = {
             message,
             history,
@@ -304,12 +306,11 @@ const STEMTutorApp = () => {
             temperature,
             use_emotion: true,
             use_topic: true,
-            // Pass the selected domain as the topic override. Backend will inject it into system prompt.
             topic_override: selectedDomain ? selectedDomain : null,
             topic_confidence_override: selectedDomain ? 0.99 : null
         };
 
-        const res = await fetch('http://localhost:8000/api/chat_openai', {
+        const res = await fetch(`${BACKEND_URL}/api/chat_openai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
@@ -325,7 +326,6 @@ const STEMTutorApp = () => {
 
     // Local fallback response (used only if OpenAI fails)
     const generateAIResponse = async (userMessage) => {
-        // emotion-aware prefix
         let emotionAwareResponse = "";
         if (emotionContext && emotionContext.has_emotion) {
             const emotion = emotionContext.emotion;
@@ -340,7 +340,6 @@ const STEMTutorApp = () => {
             }
         }
 
-        // domain-aware hint
         const domainHint = selectedDomain ? ` We'll focus on ${selectedDomain}.` : "";
 
         const responses = [
@@ -387,19 +386,15 @@ const STEMTutorApp = () => {
         const userText = inputValue;
         const userMessage = { id: Date.now(), content: userText, isUser: true };
 
-        // Add user message to UI
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
         setIsTyping(true);
 
-        // Build up-to-date history including this user message
         const currentHistory = [...chatHistory, { role: 'user', content: userText }];
 
-        // Refresh emotion context (non-blocking)
         fetchEmotionContext();
 
         try {
-            // Prefer OpenAI via backend with domain specialization
             const reply = await callOpenAI(userText, currentHistory);
             const aiMessage = { id: Date.now() + 1, content: reply, isUser: false };
 
@@ -439,65 +434,31 @@ const STEMTutorApp = () => {
     };
 
     const captureAndPredictEmotion = async () => {
-        if (isProcessing) {
-            console.log("Already processing, skipping...");
-            return;
-        }
-
-        if (!videoRef.current || serverStatus !== 'online') {
-            console.log("Video ref or server not available");
-            return;
-        }
-
-        // Wait for video to be ready
-        if (videoRef.current.readyState < 3) { // HAVE_FUTURE_DATA
-            console.log("Video not ready yet, state:", videoRef.current.readyState);
-            return;
-        }
-
-        if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
-            console.log('Video dimensions not set yet');
-            return;
-        }
+        if (isProcessing) return;
+        if (!videoRef.current || serverStatus !== 'online') return;
+        if (videoRef.current.readyState < 3) return;
+        if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) return;
 
         setIsProcessing(true);
 
         try {
-            console.log("Starting emotion capture...");
-            
-            // Create canvas with proper dimensions
             const canvas = document.createElement('canvas');
             const video = videoRef.current;
-            
-            // Set canvas size to match video
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            
             const context = canvas.getContext('2d');
-            
-            // Draw the current video frame
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            console.log(`Canvas created: ${canvas.width}x${canvas.height}`);
 
-            // Convert canvas to blob
-            const blob = await new Promise((resolve) => {
-                canvas.toBlob(resolve, 'image/jpeg', 0.8);
-            });
+            const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            if (!blob) throw new Error('Failed to create image blob');
 
-            if (!blob) {
-                throw new Error('Failed to create image blob');
-            }
-            
-            console.log(`Sending ${blob.size} byte image to server...`);
-            
             const formData = new FormData();
             formData.append('image', blob, 'frame.jpg');
             
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
             
-            const response = await fetch('http://localhost:8000/recognize_emotion', {
+            const response = await fetch(`${BACKEND_URL}/recognize_emotion`, {
                 method: 'POST',
                 mode: 'cors',
                 body: formData,
@@ -512,18 +473,13 @@ const STEMTutorApp = () => {
             }
 
             const data = await response.json();
-            console.log("Emotion detection response:", data);
             
             if (data.status === 'success') {
                 if (data.detections > 0) {
                     const confidence = Math.round(data.confidence * 100);
                     setDetectedEmotion(`${data.emotion} (${confidence}%)`);
                     setCameraError(null);
-                    
-                    // Fetch emotion context after successful detection
-                    setTimeout(() => {
-                        fetchEmotionContext();
-                    }, 500);
+                    setTimeout(() => fetchEmotionContext(), 500);
                 } else {
                     setDetectedEmotion('No face detected');
                 }
@@ -547,25 +503,9 @@ const STEMTutorApp = () => {
 
     const handleCameraToggle = async () => {
         if (isCameraOn) {
-            // Stop camera
-            console.log("Stopping camera...");
-            
-            if (predictionIntervalRef.current) {
-                clearInterval(predictionIntervalRef.current);
-                predictionIntervalRef.current = null;
-            }
-            
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => {
-                    track.stop();
-                    console.log(`Stopped track: ${track.kind}`);
-                });
-                streamRef.current = null;
-            }
-            
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
+            if (predictionIntervalRef.current) clearInterval(predictionIntervalRef.current);
+            if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
+            if (videoRef.current) videoRef.current.srcObject = null;
             
             setIsCameraOn(false);
             setDetectedEmotion(null);
@@ -573,26 +513,17 @@ const STEMTutorApp = () => {
             setIsProcessing(false);
             
         } else {
-            // Start camera
             if (serverStatus !== 'online') {
                 alert('Emotion recognition server is offline. Please start the backend server first.');
                 return;
             }
 
-            console.log("Starting camera...");
             setCameraError(null);
 
             try {
-                if (!navigator.mediaDevices?.getUserMedia) {
-                    throw new Error('Camera API not supported in this browser');
-                }
-
-                // Wait a bit for the video element to be available
+                if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera API not supported');
                 await new Promise(resolve => setTimeout(resolve, 100));
-
-                if (!videoRef.current) {
-                    throw new Error('Video element not available - please try again');
-                }
+                if (!videoRef.current) throw new Error('Video element not available');
 
                 const constraints = {
                     video: {
@@ -604,48 +535,27 @@ const STEMTutorApp = () => {
                 };
 
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                
                 videoRef.current.srcObject = stream;
                 streamRef.current = stream;
                 
-                // Set up video event handlers
-                videoRef.current.onloadedmetadata = () => {
-                    console.log('Video metadata loaded');
-                    videoRef.current.play().catch(error => {
-                        console.error('Error playing video:', error);
-                        setCameraError('Failed to play video stream');
-                    });
-                };
+                videoRef.current.onloadedmetadata = () => videoRef.current.play().catch(e => setCameraError('Failed to play video'));
                 
                 videoRef.current.oncanplay = () => {
-                    console.log('Video can start playing');
                     setIsCameraOn(true);
-                    
-                    // Start emotion detection after a short delay
                     setTimeout(() => {
                         if (videoRef.current && streamRef.current) {
-                            console.log("Starting emotion detection interval...");
                             predictionIntervalRef.current = setInterval(captureAndPredictEmotion, 3000);
-                            // Also run immediately
                             setTimeout(captureAndPredictEmotion, 1000);
                         }
                     }, 1000);
                 };
 
-                videoRef.current.onerror = (error) => {
-                    console.error('Video error:', error);
-                    setCameraError('Video playback error');
-                };
+                videoRef.current.onerror = () => setCameraError('Video playback error');
 
             } catch (error) {
                 console.error("Camera startup error:", error);
                 setCameraError(error.message);
-                
-                // Cleanup on error
-                if (streamRef.current) {
-                    streamRef.current.getTracks().forEach(track => track.stop());
-                    streamRef.current = null;
-                }
+                if (streamRef.current) streamRef.current.getTracks().forEach(track => track.stop());
                 setIsCameraOn(false);
             }
         }
@@ -655,7 +565,6 @@ const STEMTutorApp = () => {
         <>
             <FloatingSymbols />
 
-            {/* Always render video element, but hide when camera is off */}
             <div className={`video-overlay ${isCameraOn ? 'active' : 'hidden'}`}>
                 <video 
                     ref={videoRef} 
@@ -665,11 +574,7 @@ const STEMTutorApp = () => {
                     autoPlay
                 />
                 <div className="camera-status">
-                    {!isCameraOn && (
-                        <div className="camera-placeholder">
-                            📹 Camera Off
-                        </div>
-                    )}
+                    {!isCameraOn && <div className="camera-placeholder">📹 Camera Off</div>}
                     {isCameraOn && (
                         <div className="camera-controls">
                             <button 
@@ -693,9 +598,7 @@ const STEMTutorApp = () => {
                             )}
                         </div>
                     )}
-                    {isProcessing && (
-                        <div className="processing-indicator">Processing...</div>
-                    )}
+                    {isProcessing && <div className="processing-indicator">Processing...</div>}
                     {detectedEmotion && !isProcessing && (
                         <div className="emotion-display">
                             Emotion: <span className="emotion-text">{detectedEmotion}</span>
@@ -706,25 +609,15 @@ const STEMTutorApp = () => {
                             )}
                         </div>
                     )}
-                    {cameraError && (
-                        <div className="error-display">
-                            Error: {cameraError}
-                        </div>
-                    )}
+                    {cameraError && <div className="error-display">Error: {cameraError}</div>}
                 </div>
             </div>
 
-            {/* Background Options Dropdown */}
             {showBackgroundOptions && isCameraOn && (
                 <div className="background-options">
                     <div className="background-options-header">
                         <span>Choose Background</span>
-                        <button 
-                            className="close-options" 
-                            onClick={() => setShowBackgroundOptions(false)}
-                        >
-                            ✕
-                        </button>
+                        <button className="close-options" onClick={() => setShowBackgroundOptions(false)}>✕</button>
                     </div>
                     <div className="background-grid">
                         {backgroundOptions.map(option => (
@@ -747,7 +640,6 @@ const STEMTutorApp = () => {
                     <div className="header-icon">S</div>
                     <div className="header-title">STEM Tutor</div>
 
-                    {/* Domain selector + New session */}
                     <div className="domain-controls" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
                         <label htmlFor="domain-select" style={{ fontSize: 12, opacity: 0.8 }}>Field</label>
                         <select
@@ -758,9 +650,7 @@ const STEMTutorApp = () => {
                             title="Select a scientific field to specialize responses"
                         >
                             <option value="">Select field…</option>
-                            {STEM_DOMAINS.map(d => (
-                                <option key={d} value={d}>{d}</option>
-                            ))}
+                            {STEM_DOMAINS.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
                         <button
                             className="new-session"
