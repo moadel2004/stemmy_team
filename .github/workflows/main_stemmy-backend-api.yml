@@ -1,7 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
 name: Build and deploy Python app to Azure Web App - stemmy-backend-api
 
 on:
@@ -23,26 +19,14 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Create and start virtual environment
-        run: |
-          python -m venv antenv
-          source antenv/bin/activate
-      
-      - name: Install dependencies
-        run: |
-          source antenv/bin/activate
-          pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-      
-      - name: Zip artifact for deployment
-        run: zip -r release.zip . -x '*.git*'
-      
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
+          path: |
+            .
+            !.git
+            !.github
 
   deploy:
     runs-on: ubuntu-latest
@@ -50,14 +34,17 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-      
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
+          path: .
       
       - name: Login to Azure
         uses: azure/login@v2
