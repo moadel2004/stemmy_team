@@ -10,7 +10,8 @@ env:
   AZURE_WEBAPP_NAME: stemmy-api-v2
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   ACR_NAME: stemmyreg
-  IMAGE_NAME: ${{ secrets.ACR_NAME }}.azurecr.io/stemmy-backend:${{ github.sha }}
+  IMAGE_NAME: ${{ env.ACR_NAME }}.azurecr.io/stemmy-backend:${{ github.sha }}
+
 
 jobs:
   build-and-deploy:
