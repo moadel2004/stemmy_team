@@ -12,7 +12,6 @@ env:
   ACR_NAME: stemmyreg
   IMAGE_NAME: ${{ env.ACR_NAME }}.azurecr.io/stemmy-backend:${{ github.sha }}
 
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
