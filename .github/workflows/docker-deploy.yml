@@ -1,0 +1,49 @@
+name: Docker - Build and Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: stemmy-api-v2
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  ACR_NAME: stemmyreg
+  IMAGE_NAME: ${{ secrets.ACR_NAME }}.azurecr.io/stemmy-backend:${{ github.sha }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v4
+
+      - name: 'Login to Azure'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Login to Azure Container Registry (ACR)'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_NAME }}.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: 'Build and Push Docker Image'
+        run: |
+          docker build . -t ${{ env.IMAGE_NAME }}
+          docker push ${{ env.IMAGE_NAME }}
+
+      - name: 'Deploy to Azure App Service'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          images: ${{ env.IMAGE_NAME }}
+
+      - name: 'Logout from Azure'
+        run: |
+          az logout
+          az cache purge
+          az account clear
