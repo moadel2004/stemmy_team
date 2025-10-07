@@ -25,7 +25,8 @@ const STEM_DOMAINS = [
 
 // --- CONFIGURATION ---
 // This is the only line you need to change if your backend URL changes.
-const BACKEND_URL = 'https://stemmy-backend-api-dedtgxcnenhph7ea.francecentral-01.azurewebsites.net';
+const BACKEND_URL = 'https://stemmy-api-v2.azurewebsites.net';
+
 // -------------------
 
 
